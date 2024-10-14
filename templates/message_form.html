@@ -1,0 +1,47 @@
+<!-- templates/message_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}Отправить сообщение{% endblock %}
+
+{% block content %}
+    <h2>Отправить новое сообщение</h2>
+    <form id="messageForm">
+        <label for="receiver">Кому:</label>
+        <input type="text" id="receiver" name="receiver_username" required><br>
+
+        <label for="text">Сообщение:</label>
+        <textarea id="text" name="text" required></textarea><br>
+
+        <button type="submit">Отправить</button>
+    </form>
+
+    <script>
+        document.getElementById('messageForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const receiver = document.getElementById('receiver').value;
+            const text = document.getElementById('text').value;
+
+            fetch('/messages/new/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({
+                    receiver_username: receiver,
+                    text: text
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Сообщение отправлено!');
+                window.location.href = '/messages/';  // Переходим на список сообщений после отправки
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при отправке сообщения.');
+            });
+        });
+    </script>
+{% endblock %}

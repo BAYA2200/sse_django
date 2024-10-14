@@ -1,0 +1,38 @@
+<!-- templates/message_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Мои сообщения{% endblock %}
+
+{% block content %}
+    <h2>Ваши сообщения</h2>
+
+    <h3>Входящие:</h3>
+    <ul>
+    {% for message in messages %}
+        {% if message.receiver == user %}
+        <li>
+            <strong>От: {{ message.sender.username }}</strong><br>
+            {{ message.text }}<br>
+            <small>{{ message.created_at }}</small>
+        </li>
+        {% endif %}
+    {% empty %}
+        <li>Нет входящих сообщений.</li>
+    {% endfor %}
+    </ul>
+
+    <h3>Отправленные:</h3>
+    <ul>
+    {% for message in messages %}
+        {% if message.sender == user %}
+        <li>
+            <strong>Кому: {{ message.receiver.username }}</strong><br>
+            {{ message.text }}<br>
+            <small>{{ message.created_at }}</small>
+        </li>
+        {% endif %}
+    {% empty %}
+        <li>Нет отправленных сообщений.</li>
+    {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,0 +1,32 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Мой блог{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        h1 { font-size: 24px; }
+        h2 { font-size: 20px; }
+        .post { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
+        .comments { margin-top: 10px; }
+        .comment { margin-top: 5px; padding: 5px; border: 1px solid #eee; }
+        form { margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{% block heading %}Блог{% endblock %}</h1>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <hr>
+        <p>&copy; 2024 Мой блог</p>
+    </footer>
+</body>
+</html>

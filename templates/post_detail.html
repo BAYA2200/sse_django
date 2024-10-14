@@ -1,0 +1,110 @@
+<!-- templates/post_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block heading %}{{ post.title }}{% endblock %}
+
+{% block content %}
+    <div class="post">
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.body }}</p>
+
+        <div class="comments">
+            <h4>Комментарии:</h4>
+            <div id="comment-list">
+                {% for comment in post.comments.all %}
+                    <div class="comment" data-comment-id="{{ comment.id }}">
+                        <p>{{ comment.text }} — {{ comment.author.username }}</p>
+
+                        <!-- Показываем кнопку "Ответить", только если автор комментария не текущий пользователь -->
+                        {% if comment.author != request.user %}
+                            <button onclick="showReplyForm({{ comment.id }})">Ответить</button>
+                        {% endif %}
+
+                        <!-- Список ответов на комментарий -->
+                        <div class="replies">
+                            {% for reply in comment.replies.all %}
+                                <div class="comment">
+                                    <p>{{ reply.text }} — {{ reply.author.username }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Форма для ответа на комментарий -->
+                        <div class="reply-form" id="reply-form-{{ comment.id }}" style="display: none;">
+                            <textarea id="replyText-{{ comment.id }}" placeholder="Ваш ответ" required></textarea><br>
+                            <button onclick="submitReply({{ comment.id }})">Добавить ответ</button>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>Комментариев пока нет.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Форма для добавления нового комментария -->
+        <form id="commentForm" data-post-id="{{ post.id }}">
+            <textarea id="commentText" placeholder="Ваш комментарий" required></textarea><br>
+            <button type="submit">Добавить комментарий</button>
+        </form>
+    </div>
+
+    <!-- Подключение к SSE для получения уведомлений -->
+    <script>
+        document.getElementById('commentForm').addEventListener('submit', function(event) {
+            event.preventDefault();  // Останавливаем стандартную отправку формы
+
+            const postId = this.getAttribute('data-post-id');
+            const commentText = document.getElementById('commentText').value;
+
+            // Отправляем запрос на сервер для добавления нового комментария
+            fetch(`/posts/${postId}/comments/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',  // CSRF токен для защиты формы
+                },
+                body: JSON.stringify({ post: postId, text: commentText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Комментарий добавлен');
+                location.reload();  // Перезагружаем страницу для обновления комментариев
+            });
+        });
+
+        // Функция для показа формы ответа
+        function showReplyForm(commentId) {
+            const replyForm = document.getElementById(`reply-form-${commentId}`);
+            replyForm.style.display = 'block';
+        }
+
+        // Функция для отправки ответа на комментарий
+        function submitReply(parentId) {
+            const postId = document.getElementById('commentForm').getAttribute('data-post-id');
+            const replyText = document.getElementById(`replyText-${parentId}`).value;
+
+            // Отправляем запрос на сервер для добавления ответа
+            fetch(`/posts/${postId}/comments/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: JSON.stringify({ post: postId, text: replyText, parent: parentId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Ответ добавлен');
+                location.reload();  // Перезагружаем страницу для обновления комментариев и ответов
+            });
+        }
+
+        // Подключение к SSE для получения уведомлений
+        const eventSource = new EventSource("/events/");
+        eventSource.onmessage = function(event) {
+            alert("Новое уведомление: " + event.data);  // Показ уведомления автору комментария
+        };
+    </script>
+{% endblock %}
